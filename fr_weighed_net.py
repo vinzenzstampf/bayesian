@@ -31,6 +31,8 @@ from keras.optimizers import SGD, Adam
 
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import roc_curve, roc_auc_score
+
+from pdb import set_trace
        
 # fix random seed for reproducibility (FIXME! not really used by Keras)
 np.random.seed(1986)
@@ -99,7 +101,7 @@ features += [
 
 # reindex to avoid duplicated indices, useful for batches
 # https://stackoverflow.com/questions/27236275/what-does-valueerror-cannot-reindex-from-a-duplicate-axis)%20-mean
-data.index = np.array(xrange(len(data)))
+data.index = np.array(range(len(data)))
 data = data.sample(frac=1, replace=False, random_state=1986) # shuffle
 
 # subtract genuine electrons using negative weights
@@ -151,7 +153,7 @@ opt = 'Adam'
 model.compile(optimizer=opt, loss='binary_crossentropy', metrics=['mae', 'acc'])
 
 # print net summary
-print model.summary()
+print( model.summary() )
 
 # plot the models
 # https://keras.io/visualization/
@@ -181,7 +183,7 @@ qt.fit(X[features])
 xx = qt.transform(X[features])
 
 # save the frozen transformer
-pickle.dump( qt, open( 'input_tranformation_weighted.pck', 'w' ) )
+pickle.dump( qt, open( 'input_tranformation_weighted.pck', 'wb' ) )
 
 # early stopping
 # monitor = 'val_acc'
@@ -194,7 +196,8 @@ reduce_lr = ReduceLROnPlateau(monitor=monitor, mode='auto', factor=0.5, patience
 
 # train only the classifier. beta is set at 0 and the discriminator is not trained
 # history = model.fit(xx, Y, epochs=2000, validation_split=0.5, callbacks=[es, reduce_lr], batch_size=32, sample_weight=np.array(X['isnonprompt']))  
-history = model.fit(xx, Y, epochs=2000, validation_split=0.5, callbacks=[es, reduce_lr], batch_size=32)  
+history = model.fit(xx, Y, epochs=2000, validation_split=0.5, callbacks=[es, reduce_lr], batch_size=32)  # FIXME # DEFAULT 
+# history = model.fit(xx, Y, epochs=2, validation_split=0.5, callbacks=[es, reduce_lr], batch_size=32)  #TEST 
 
 # plot loss function trends for train and validation sample
 plt.clf()
@@ -216,19 +219,19 @@ plt.savefig('accuracy_history_weighted.pdf')
 plt.clf()
 
 # plot accuracy trends for train and validation sample
-plt.plot(history.history['mean_absolute_error'], label='train')
-plt.plot(history.history['val_mean_absolute_error'], label='test')
+plt.plot(history.history['mae'], label='train')
+plt.plot(history.history['val_mae'], label='test')
 plt.legend()
 plt.yscale('log')
 plt.savefig('mean_absolute_error_history_weighted.pdf')
 plt.clf()
 
 # calculate predictions on the data sample
-print 'predicting on', data.shape[0], 'events'
+print ('predicting on', data.shape[0], 'events')
 x = pd.DataFrame(data, columns=features)
 # y = model.predict(x)
 # load the transformation with the correct parameters!
-qt = pickle.load(open( 'input_tranformation_weighted.pck', 'r' ))
+qt = pickle.load(open( 'input_tranformation_weighted.pck', 'rb' ))
 xx = qt.transform(x[features])
 y = model.predict(xx)
 
